@@ -2,10 +2,13 @@
 
 How to try ShadowRepo today. Two paths: install from registries (fast), or build from source (full sidebar experience).
 
+**Repository:** https://github.com/waynewangyuxuan/shadowrepo-extension-package
+**npm:** https://www.npmjs.com/package/shadowrepo-mcp-server
+
 **Status today:**
 - ✅ Claude Code plugin — installable via GitHub-based marketplace
-- ✅ MCP server (`shadowrepo-mcp-server`) — on [npm](https://www.npmjs.com/package/shadowrepo-mcp-server), pulled automatically by the plugin
-- 🚧 VS Code extension — currently **install-from-source only** (VS Code Marketplace listing in progress)
+- ✅ MCP server (`shadowrepo-mcp-server`) — on npm, pulled automatically by the plugin via `npx`
+- 🚧 VS Code extension — currently **install-from-source only** (Marketplace listing deferred; see Path B below)
 
 ---
 
@@ -53,9 +56,11 @@ The sidebar isn't on the VS Code Marketplace yet, so you need to clone this repo
 
 - **Node.js 20+** (`node --version`)
 - **pnpm 9+** — `npm install -g pnpm` if you don't have it
-- **VS Code** — the `code` CLI should be on your PATH (in VS Code, open the command palette and run "Shell Command: Install 'code' command in PATH")
+- **VS Code** with the `code` CLI on your `PATH` (test with `code --version`)
 - **(Optional)** **GitHub CLI** (`gh`) — only if you want to dry-run the PR-comment command
 - **(Optional)** **Claude Code** — already covered by Path A; the runners below can be invoked directly with `node` without Claude installed
+
+> Assumes a Linux/WSL environment. The build is pure Node + pnpm, so it should work on any Unix-like setup.
 
 ### 1. Clone and build
 
@@ -118,7 +123,7 @@ This produces the markdown comment ShadowRepo would post on a PR (top features, 
 ## Troubleshooting
 
 - **`pnpm install` fails on Node 18 or earlier** — upgrade to Node 20+. The TypeScript build uses APIs that require it.
-- **`code` command not found** — open VS Code, command palette, "Shell Command: Install 'code' command in PATH" (macOS/Linux).
+- **`code` command not found** — install the `code` CLI from your VS Code's command palette ("Shell Command: Install 'code' command in PATH"), or add `<vscode-install-dir>/bin/` to your `PATH`.
 - **Sidebar shows nothing** — make sure you opened `fixtures/sample-repo` as the workspace, not the repo root. The extension looks for a `.shadowrepo/` folder at the workspace root.
 - **Anchor clicks open the wrong file (or warn-and-skip)** — expected on the bundled fixture; see the note under step 3.
 - **`/plugin marketplace add` fails** — make sure your Claude Code version supports plugin marketplaces. Try `claude --version`.
