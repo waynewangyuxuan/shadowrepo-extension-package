@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShadowRepo</title>
+<style>
+/* ═══════════════════════════════════════════════
+   ShadowRepo Dashboard v2 — Knowledge Graph Viewer
+   Zero deps. Single file. Dark premium UI.
+   ═══════════════════════════════════════════════ */
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* surfaces */
+  --bg:       #09090b;
+  --surface:  #131316;
+  --surface2: #1c1c21;
+  --surface3: #26262c;
+  --glass:    rgba(19, 19, 22, 0.85);
+  --border:   rgba(255,255,255,0.06);
+  --border-h: rgba(255,255,255,0.12);
+  /* text */
+  --text:     #ececf1;
+  --text-2:   #a1a1aa;
+  --text-3:   #71717a;
+  /* accent */
+  --accent:   #818cf8;
+  --accent-2: #6366f1;
+  --accent-bg: rgba(129,140,248,0.08);
+  --accent-bg2: rgba(129,140,248,0.15);
+  /* semantic */
+  --green:  #34d399; --green-bg:  rgba(52,211,153,0.12);
+  --yellow: #fbbf24; --yellow-bg: rgba(251,191,36,0.12);
+  --red:    #f87171; --red-bg:    rgba(248,113,113,0.12);
+  --orange: #fb923c; --orange-bg: rgba(251,146,60,0.12);
+  --purple: #a78bfa; --purple-bg: rgba(167,139,250,0.12);
+  --cyan:   #22d3ee; --cyan-bg:   rgba(34,211,238,0.12);
+  --blue:   #60a5fa; --blue-bg:   rgba(96,165,250,0.12);
+  /* layout */
+  --sidebar-w: 260px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  /* fonts */
+  --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+html, body {
+  height: 100%; overflow: hidden;
+  font-family: var(--sans); font-size: 14px; line-height: 1.6;
+  background: var(--bg); color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout Shell ── */
+.app { display: flex; height: 100vh; }
+.sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* ── Topbar ── */
+.topbar {
+  height: 52px; min-height: 52px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-toggle { display: none; background: none; border: none; color: var(--text-2); font-size: 18px; cursor: pointer; padding: 8px; border-radius: var(--radius-sm); min-width: 36px; min-height: 36px; font-family: var(--sans); }
+.topbar-toggle:hover { color: var(--text); background: var(--surface2); }
+.logo { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.logo span { color: var(--accent); }
+.repo-badge { font-size: 12px; color: var(--text-3); font-family: var(--mono); padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+.topbar-stats { display: flex; gap: 16px; margin-left: auto; align-items: center; }
+.topbar-stat { font-size: 12px; color: var(--text-2); }
+.topbar-stat strong { color: var(--text); font-weight: 600; margin-right: 3px; }
+.build-chip { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 4px; }
+.build-chip.complete { background: var(--green-bg); color: var(--green); }
+.build-chip.partial  { background: var(--yellow-bg); color: var(--yellow); }
+.cmd-trigger { font-size: 11px; color: var(--text-3); padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: none; font-family: var(--mono); transition: border-color 0.15s; }
+.cmd-trigger:hover { border-color: var(--border-h); color: var(--text-2); }
+
+/* ── Sidebar ── */
+.sidebar-header { padding: 14px 14px 10px; }
+.sidebar-header h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 8px; }
+.sidebar-search {
+  width: 100%; padding: 7px 10px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-family: var(--sans); font-size: 12px; outline: none;
+  transition: border-color 0.15s;
+}
+.sidebar-search:focus { border-color: var(--accent); }
+.sidebar-search::placeholder { color: var(--text-3); }
+.tree-scroll { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+/* ── Tree ── */
+.tree-item { user-select: none; }
+.tree-row {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 10px 6px calc(10px + var(--depth, 0) * 16px);
+  cursor: pointer; border-radius: 0;
+  min-height: 32px; transition: background 0.1s;
+}
+.tree-row:hover { background: var(--surface2); }
+.tree-row.selected { background: var(--accent-bg); }
+.tree-arrow { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 9px; transition: transform 0.15s; flex-shrink: 0; }
+.tree-arrow.open { transform: rotate(90deg); }
+.tree-arrow.hidden { visibility: hidden; }
+.tree-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.tree-dot.business   { background: var(--accent); }
+.tree-dot.platform   { background: var(--purple); }
+.tree-dot.cross-cutting { background: var(--cyan); }
+.tree-name { flex: 1; font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.1s; }
+.tree-row:hover .tree-name, .tree-row.selected .tree-name { color: var(--text); }
+.tree-badge { font-size: 11px; color: var(--text-3); font-family: var(--mono); min-width: 20px; text-align: right; flex-shrink: 0; }
+.tree-children { overflow: hidden; }
+.tree-children.collapsed { display: none; }
+
+/* ── Tabs ── */
+.tab-strip {
+  display: flex; gap: 0; padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  padding: 10px 16px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--text-3);
+  background: none; border: none; border-bottom: 2px solid transparent;
+  font-family: var(--sans); min-height: 42px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--text-2); }
+.tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+/* ── Content ── */
+.content { flex: 1; overflow-y: auto; }
+.panel { display: none; height: 100%; }
+.panel.active { display: flex; flex-direction: column; }
+
+/* ── Graph Panel ── */
+.graph-container { flex: 1; position: relative; overflow: hidden; }
+.graph-container canvas { display: block; width: 100%; height: 100%; }
+.graph-legend {
+  position: absolute; bottom: 16px; left: 16px;
+  background: var(--glass); backdrop-filter: blur(12px);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 16px; display: flex; gap: 14px; font-size: 11px; color: var(--text-2);
+}
+.graph-legend-item { display: flex; align-items: center; gap: 5px; }
+.graph-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.graph-tooltip {
+  position: absolute; pointer-events: none; display: none;
+  background: var(--glass); backdrop-filter: blur(16px);
+  border: 1px solid var(--border-h); border-radius: var(--radius);
+  padding: 10px 14px; font-size: 12px; max-width: 280px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.graph-tooltip.show { display: block; }
+.graph-tooltip h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.graph-tooltip p { color: var(--text-2); font-size: 11px; line-height: 1.5; }
+.graph-hint {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  color: var(--text-3); font-size: 13px; pointer-events: none;
+}
+
+/* ── Specs Panel ── */
+.specs-panel { padding: 20px; gap: 16px; }
+.specs-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.specs-search {
+  flex: 1; min-width: 180px; padding: 8px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-family: var(--sans); font-size: 13px; outline: none;
+  transition: border-color 0.15s;
+}
+.specs-search:focus { border-color: var(--accent); }
+.specs-search::placeholder { color: var(--text-3); }
+.chip {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--border); background: none; color: var(--text-3);
+  font-family: var(--sans); transition: all 0.15s; min-height: 30px;
+}
+.chip:hover { border-color: var(--border-h); color: var(--text-2); }
+.chip.on { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+.specs-meta { font-size: 12px; color: var(--text-3); padding: 2px 0; }
+.specs-list { display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; }
+
+/* ── Spec Card ── */
+.spec-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.spec-card:hover { border-color: var(--border-h); transform: translateY(-1px); }
+.spec-card.open { border-color: var(--accent); background: var(--surface2); }
+.spec-row { display: flex; align-items: center; gap: 8px; }
+.spec-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+}
+.spec-tag-intent     { background: var(--accent-bg2); color: var(--accent); }
+.spec-tag-decision   { background: var(--yellow-bg); color: var(--yellow); }
+.spec-tag-constraint { background: var(--red-bg); color: var(--red); }
+.spec-tag-contract   { background: var(--purple-bg); color: var(--purple); }
+.spec-tag-convention { background: var(--green-bg); color: var(--green); }
+.spec-tag-context    { background: var(--cyan-bg); color: var(--cyan); }
+.spec-tag-change     { background: var(--orange-bg); color: var(--orange); }
+.spec-id { font-size: 11px; font-family: var(--mono); color: var(--text-3); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spec-conf { font-size: 11px; font-family: var(--mono); color: var(--text-3); flex-shrink: 0; }
+.spec-summary { margin-top: 6px; font-size: 13px; color: var(--text-2); line-height: 1.6; }
+.spec-conf-bar { height: 2px; margin-top: 8px; background: var(--surface3); border-radius: 1px; overflow: hidden; }
+.spec-conf-fill { height: 100%; border-radius: 1px; }
+.spec-details { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.spec-details h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); margin: 8px 0 4px; }
+.spec-details h4:first-child { margin-top: 0; }
+.spec-details p { font-size: 12px; color: var(--text-2); line-height: 1.7; }
+.spec-details ul { list-style: none; }
+.spec-details li { font-size: 12px; font-family: var(--mono); color: var(--accent); padding: 2px 0; }
+.spec-details .meta-line { display: flex; gap: 16px; margin-top: 8px; }
+.spec-details .meta-line span { font-size: 11px; color: var(--text-3); }
+
+/* ── Feature Detail Header ── */
+.feature-header {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px; margin-bottom: 16px;
+}
+.feature-header h2 { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+.feature-header .fh-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-3); margin-bottom: 8px; }
+.feature-header .fh-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 4px; }
+.feature-header .fh-type.business   { background: var(--accent-bg); color: var(--accent); }
+.feature-header .fh-type.platform   { background: var(--purple-bg); color: var(--purple); }
+.feature-header .fh-type.cross-cutting { background: var(--cyan-bg); color: var(--cyan); }
+.feature-header .fh-desc { font-size: 13px; color: var(--text-2); margin-bottom: 8px; }
+.feature-header .fh-files { max-height: 100px; overflow-y: auto; }
+.feature-header .fh-files li { font-size: 11px; font-family: var(--mono); color: var(--text-3); padding: 1px 0; }
+
+/* ── Coverage Panel ── */
+.cov-panel { padding: 20px; gap: 20px; }
+.cov-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.cov-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px;
+}
+.cov-card .num { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+.cov-card .label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.cov-bar-wrap { height: 6px; background: var(--surface3); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.cov-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.cov-section-title { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* treemap */
+.treemap-wrap { flex: 1; min-height: 300px; position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.treemap-wrap canvas { display: block; width: 100%; height: 100%; }
+.treemap-tooltip {
+  position: absolute; pointer-events: none; display: none;
+  background: var(--glass); backdrop-filter: blur(16px);
+  border: 1px solid var(--border-h); border-radius: var(--radius);
+  padding: 8px 12px; font-size: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.treemap-tooltip.show { display: block; }
+
+/* ── Command Palette ── */
+.cmd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding-top: 20vh; }
+.cmd-overlay.open { display: flex; }
+.cmd-box {
+  width: 480px; max-width: 90vw;
+  background: var(--surface); border: 1px solid var(--border-h); border-radius: 12px;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.5); overflow: hidden;
+}
+.cmd-input {
+  width: 100%; padding: 14px 18px; background: none; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-family: var(--sans); font-size: 15px; outline: none;
+}
+.cmd-input::placeholder { color: var(--text-3); }
+.cmd-results { max-height: 320px; overflow-y: auto; padding: 6px; }
+.cmd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 13px; color: var(--text-2);
+}
+.cmd-item:hover, .cmd-item.active { background: var(--surface2); color: var(--text); }
+.cmd-item .cmd-type { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--text-3); min-width: 55px; }
+.cmd-empty { padding: 20px; text-align: center; color: var(--text-3); font-size: 13px; }
+
+/* ── Loading ── */
+.loading-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100vh; gap: 16px;
+}
+.loading-screen h1 { font-size: 22px; font-weight: 700; }
+.loading-screen h1 span { color: var(--accent); }
+.loading-screen p { color: var(--text-3); font-size: 13px; max-width: 380px; text-align: center; line-height: 1.7; }
+.load-btn {
+  padding: 10px 24px; background: var(--accent-2); color: #fff; border: none;
+  border-radius: var(--radius); font-family: var(--sans); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.load-btn:hover { opacity: 0.85; }
+.load-hint { color: var(--text-3); font-size: 11px; }
+.load-error { color: var(--red); font-size: 12px; }
+
+/* drag overlay */
+.drag-overlay {
+  position: fixed; inset: 0; background: rgba(99,102,241,0.06);
+  border: 2px dashed var(--accent); z-index: 2000; display: none;
+  align-items: center; justify-content: center; font-size: 16px; font-weight: 600; color: var(--accent);
+}
+.drag-overlay.show { display: flex; }
+
+/* mobile sidebar overlay */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; }
+.sidebar-overlay.open { display: block; }
+
+/* ── Focus ── */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+:focus:not(:focus-visible) { outline: none; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; display: none; width: 280px; min-width: 280px; }
+  .sidebar.open { display: flex; }
+  .topbar-toggle { display: flex; align-items: center; justify-content: center; }
+  :root { --sidebar-w: 0px; }
+  .topbar-stats { gap: 10px; }
+  .cmd-trigger { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading" class="loading-screen">
+  <h1>Shadow<span>Repo</span></h1>
+  <p>Semantic knowledge graph for your codebase. Load <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:12px">.shadowrepo/</code> data to explore.</p>
+  <button class="load-btn" onclick="pickFolder()">Open .shadowrepo/ folder</button>
+  <div class="load-hint">or drag &amp; drop the 4 JSON files</div>
+  <div id="load-status" class="load-hint"></div>
+  <div id="load-error" class="load-error"></div>
+</div>
+
+<div id="drag-overlay" class="drag-overlay">Drop .shadowrepo/ JSON files</div>
+
+<!-- App -->
+<div id="app" class="app" style="display:none;">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Features</h2>
+      <input class="sidebar-search" id="tree-search" placeholder="Search features..." oninput="filterTree(this.value)">
+    </div>
+    <div class="tree-scroll" id="tree-scroll"></div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Menu">&#9776;</button>
+      <h1 class="logo">Shadow<span>Repo</span></h1>
+      <span class="repo-badge" id="repo-name"></span>
+      <div class="topbar-stats" id="topbar-stats"></div>
+      <button class="cmd-trigger" onclick="openCmd()">Search <kbd style="opacity:0.5;margin-left:4px">&#8984;K</kbd></button>
+    </header>
+    <div class="tab-strip" role="tablist">
+      <button class="tab-btn active" data-tab="graph" role="tab" onclick="switchTab('graph')">Graph</button>
+      <button class="tab-btn" data-tab="specs" role="tab" onclick="switchTab('specs')">Specs</button>
+      <button class="tab-btn" data-tab="coverage" role="tab" onclick="switchTab('coverage')">Coverage</button>
+    </div>
+    <div class="content">
+      <!-- Graph -->
+      <div id="panel-graph" class="panel active">
+        <div class="graph-container" id="graph-container">
+          <canvas id="graph-canvas"></canvas>
+          <div class="graph-legend">
+            <div class="graph-legend-item"><span class="graph-legend-dot" style="background:var(--accent)"></span> business</div>
+            <div class="graph-legend-item"><span class="graph-legend-dot" style="background:var(--purple)"></span> platform</div>
+            <div class="graph-legend-item"><span class="graph-legend-dot" style="background:var(--cyan)"></span> cross-cutting</div>
+          </div>
+          <div class="graph-tooltip" id="graph-tooltip"></div>
+          <div class="graph-hint" id="graph-hint">loading graph...</div>
+        </div>
+      </div>
+      <!-- Specs -->
+      <div id="panel-specs" class="panel specs-panel">
+        <div id="feature-header"></div>
+        <div class="specs-toolbar">
+          <input class="specs-search" id="spec-search" placeholder="Search specs..." oninput="renderSpecs()">
+          <div id="type-chips"></div>
+        </div>
+        <div class="specs-meta" id="spec-count"></div>
+        <div class="specs-list" id="spec-list"></div>
+      </div>
+      <!-- Coverage -->
+      <div id="panel-coverage" class="panel cov-panel">
+        <div class="cov-stats" id="cov-stats"></div>
+        <div class="cov-section-title">Coverage by Feature</div>
+        <div class="treemap-wrap" id="treemap-wrap">
+          <canvas id="treemap-canvas"></canvas>
+          <div class="treemap-tooltip" id="treemap-tooltip"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Command Palette -->
+<div class="cmd-overlay" id="cmd-overlay" onclick="if(event.target===this)closeCmd()">
+  <div class="cmd-box">
+    <input class="cmd-input" id="cmd-input" placeholder="Search features, specs..." oninput="updateCmd()" onkeydown="cmdKey(event)">
+    <div class="cmd-results" id="cmd-results"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   Data & State
+   ═══════════════════════════════════════════════ */
+let D = { meta: null, features: [], specs: [], coverage: null };
+let selectedFeature = null;
+let activeFilters = new Set();
+let expandedSpecs = new Set();
+let cmdIdx = 0;
+const TYPES = ['intent','decision','constraint','contract','convention','context','change'];
+const TYPE_COLORS = { intent:'#818cf8', decision:'#fbbf24', constraint:'#f87171', contract:'#a78bfa', convention:'#34d399', context:'#22d3ee', change:'#fb923c' };
+
+/* ═══════════════════════════════════════════════
+   Data Loading
+   Mode 1: Inline data (injected by build skill — works with file://)
+   Mode 2: Fetch from relative paths (works with HTTP server)
+   Mode 3: Manual pick / drag-drop
+   ═══════════════════════════════════════════════ */
+
+// ── INLINE DATA (replaced by build skill) ──
+// When the build skill generates .shadowrepo/index.html, it replaces
+// these null values with actual JSON. If they're null, we fall back to fetch.
+const INLINE_META = /*__SHADOWREPO_META__*/ null;
+const INLINE_FEATURES = /*__SHADOWREPO_FEATURES__*/ null;
+const INLINE_SPECS = /*__SHADOWREPO_SPECS__*/ null;
+const INLINE_COVERAGE = /*__SHADOWREPO_COVERAGE__*/ null;
+
+(async function autoLoad() {
+  // Mode 1: Inline data present — instant boot, no fetch needed
+  if (INLINE_META && INLINE_FEATURES && INLINE_SPECS) {
+    D = { meta: INLINE_META, features: INLINE_FEATURES, specs: INLINE_SPECS, coverage: INLINE_COVERAGE };
+    boot(); return;
+  }
+  // Mode 2: Try fetching from relative paths (HTTP server)
+  const s = document.getElementById('load-status');
+  const paths = ['./', '../.shadowrepo/', '.shadowrepo/'];
+  for (const base of paths) {
+    try {
+      s.textContent = 'Looking for data...';
+      const [meta, features, specs, coverage] = await Promise.all(
+        ['meta.json','features.json','specs.json','coverage.json'].map(f =>
+          fetch(base + f).then(r => { if (!r.ok) throw 0; return r.json(); })
+        )
+      );
+      D = { meta, features, specs, coverage };
+      boot(); return;
+    } catch {}
+  }
+  // Mode 3: Manual
+  s.textContent = 'Open a .shadowrepo/ folder or drag & drop the JSON files.';
+})();
+
+async function pickFolder() {
+  try {
+    if (window.showDirectoryPicker) {
+      const dir = await window.showDirectoryPicker();
+      const files = {};
+      for await (const [name, handle] of dir) {
+        if (handle.kind === 'file' && name.endsWith('.json')) {
+          files[name] = JSON.parse(await (await handle.getFile()).text());
+        }
+      }
+      loadFiles(files);
+    } else {
+      const input = Object.assign(document.createElement('input'), { type:'file', multiple:true, accept:'.json' });
+      input.onchange = async () => {
+        const files = {};
+        for (const f of input.files) files[f.name] = JSON.parse(await f.text());
+        loadFiles(files);
+      };
+      input.click();
+    }
+  } catch (e) { document.getElementById('load-error').textContent = e.message; }
+}
+
+function loadFiles(files) {
+  if (!files['meta.json'] || !files['features.json'] || !files['specs.json'])
+    return (document.getElementById('load-error').textContent = 'Need meta.json, features.json, specs.json');
+  D = { meta: files['meta.json'], features: files['features.json'], specs: files['specs.json'], coverage: files['coverage.json'] || null };
+  boot();
+}
+
+// Drag & drop
+document.addEventListener('dragover', e => { e.preventDefault(); document.getElementById('drag-overlay').classList.add('show'); });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) document.getElementById('drag-overlay').classList.remove('show'); });
+document.addEventListener('drop', async e => {
+  e.preventDefault(); document.getElementById('drag-overlay').classList.remove('show');
+  const files = {};
+  for (const f of e.dataTransfer.files) if (f.name.endsWith('.json')) files[f.name] = JSON.parse(await f.text());
+  loadFiles(files);
+});
+
+/* ═══════════════════════════════════════════════
+   Boot
+   ═══════════════════════════════════════════════ */
+function boot() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  renderTopbar();
+  renderTree();
+  renderTypeChips();
+  renderSpecs();
+  renderCoverage();
+  // Read hash
+  if (location.hash) {
+    const h = location.hash.slice(1).split('/');
+    if (h[0] === 'feature' && h[1]) { selectedFeature = h[1]; renderTree(); renderSpecs(); switchTab('specs'); }
+  }
+  requestAnimationFrame(() => requestAnimationFrame(initGraph));
+}
+
+/* ═══════════════════════════════════════════════
+   Topbar
+   ═══════════════════════════════════════════════ */
+function renderTopbar() {
+  const m = D.meta; if (!m) return;
+  document.getElementById('repo-name').textContent = m.repo_name || '';
+  const st = (m.build_status || '').toLowerCase();
+  document.getElementById('topbar-stats').innerHTML = `
+    <span class="build-chip ${st}">${m.build_status||'?'}</span>
+    <span class="topbar-stat"><strong>${m.stats?.total_features||D.features.length}</strong>features</span>
+    <span class="topbar-stat"><strong>${m.stats?.total_specs||D.specs.length}</strong>specs</span>
+    <span class="topbar-stat"><strong>${m.stats?.coverage_percent!=null?m.stats.coverage_percent+'%':'—'}</strong>coverage</span>
+  `;
+}
+
+/* ═══════════════════════════════════════════════
+   Feature Tree
+   ═══════════════════════════════════════════════ */
+function buildTree() {
+  const map = new Map();
+  D.features.forEach(f => map.set(f.feature_id, { ...f, children: [] }));
+  const roots = [];
+  D.features.forEach(f => {
+    const n = map.get(f.feature_id);
+    if (f.parent && map.has(f.parent)) map.get(f.parent).children.push(n);
+    else roots.push(n);
+  });
+  return roots;
+}
+
+function renderTree(filter) {
+  filter = filter || document.getElementById('tree-search')?.value || '';
+  document.getElementById('tree-scroll').innerHTML = renderNodes(buildTree(), filter.toLowerCase(), 0);
+}
+function filterTree(v) { renderTree(v); }
+
+function renderNodes(nodes, filter, depth) {
+  return nodes
+    .filter(n => !filter || matchNode(n, filter))
+    .sort((a,b) => a.name.localeCompare(b.name))
+    .map(n => {
+      const cnt = D.specs.filter(s => s.feature_name === n.feature_id).length;
+      const hasCh = n.children.length > 0;
+      const sel = selectedFeature === n.feature_id;
+      return `<div class="tree-item">
+        <div class="tree-row${sel?' selected':''}" style="--depth:${depth}" onclick="selectFeature('${n.feature_id}')">
+          <span class="tree-arrow${hasCh?'':' hidden'}${hasCh?' open':''}" onclick="event.stopPropagation();toggleNode(this)">&#9654;</span>
+          <span class="tree-dot ${n.type}"></span>
+          <span class="tree-name">${esc(n.name)}</span>
+          <span class="tree-badge">${cnt}</span>
+        </div>
+        ${hasCh?`<div class="tree-children">${renderNodes(n.children, filter, depth+1)}</div>`:''}
+      </div>`;
+    }).join('');
+}
+
+function matchNode(n, f) {
+  return n.name.toLowerCase().includes(f) || n.feature_id.toLowerCase().includes(f) || n.children.some(c => matchNode(c, f));
+}
+function toggleNode(el) {
+  const ch = el.closest('.tree-item').querySelector('.tree-children');
+  if (!ch) return;
+  ch.classList.toggle('collapsed');
+  el.classList.toggle('open');
+}
+function selectFeature(id) {
+  selectedFeature = selectedFeature === id ? null : id;
+  location.hash = selectedFeature ? 'feature/' + selectedFeature : '';
+  renderTree();
+  renderFeatureHeader();
+  renderSpecs();
+  if (selectedFeature) switchTab('specs');
+}
+
+/* ═══════════════════════════════════════════════
+   Feature Header
+   ═══════════════════════════════════════════════ */
+function renderFeatureHeader() {
+  const el = document.getElementById('feature-header');
+  if (!selectedFeature) { el.innerHTML = ''; return; }
+  const f = D.features.find(x => x.feature_id === selectedFeature);
+  if (!f) { el.innerHTML = ''; return; }
+  const cnt = D.specs.filter(s => s.feature_name === f.feature_id).length;
+  const files = f.key_files || [];
+  el.innerHTML = `<div class="feature-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <h2>${esc(f.name)}</h2>
+      <span class="fh-type ${f.type}">${f.type}</span>
+    </div>
+    <div class="fh-meta"><span>${cnt} specs</span><span>${files.length} files</span>${f.parent?`<span>parent: ${f.parent}</span>`:''}</div>
+    ${f.description?`<div class="fh-desc">${esc(f.description)}</div>`:''}
+    ${files.length?`<ul class="fh-files">${files.slice(0,15).map(p=>`<li>${esc(p)}</li>`).join('')}${files.length>15?`<li style="color:var(--text-3)">+${files.length-15} more</li>`:''}</ul>`:''}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   Spec Browser
+   ═══════════════════════════════════════════════ */
+function renderTypeChips() {
+  const counts = {};
+  TYPES.forEach(t => counts[t] = 0);
+  D.specs.forEach(s => { if (counts[s.type] !== undefined) counts[s.type]++; });
+  document.getElementById('type-chips').innerHTML = TYPES
+    .filter(t => counts[t])
+    .map(t => `<button class="chip${activeFilters.has(t)?' on':''}" onclick="toggleFilter('${t}')">${t} ${counts[t]}</button>`)
+    .join('');
+}
+function toggleFilter(t) {
+  activeFilters.has(t) ? activeFilters.delete(t) : activeFilters.add(t);
+  renderTypeChips(); renderSpecs();
+}
+
+function renderSpecs() {
+  const q = (document.getElementById('spec-search')?.value || '').toLowerCase();
+  let list = D.specs;
+  if (selectedFeature) list = list.filter(s => s.feature_name === selectedFeature);
+  if (activeFilters.size) list = list.filter(s => activeFilters.has(s.type));
+  if (q) list = list.filter(s => s.spec_id.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q) || (s.detail||'').toLowerCase().includes(q));
+  list.sort((a,b) => (b.confidence||0) - (a.confidence||0));
+  document.getElementById('spec-count').textContent = `${list.length} spec${list.length!==1?'s':''}${selectedFeature?' in '+selectedFeature:''}`;
+  const el = document.getElementById('spec-list');
+  const show = list.slice(0, 80);
+  el.innerHTML = show.map(specCard).join('') + (list.length > 80 ? `<div style="text-align:center;padding:12px"><button class="load-btn" style="font-size:12px;padding:8px 16px" onclick="this.parentElement.innerHTML='Loading...';setTimeout(()=>{document.getElementById('spec-list').innerHTML=window._allSpecs},50)">Show all ${list.length}</button></div>` : '');
+  window._allSpecs = list.map(specCard).join('');
+  renderFeatureHeader();
+}
+
+function specCard(s) {
+  const open = expandedSpecs.has(s.spec_id);
+  const conf = s.confidence != null ? Math.round(s.confidence*100) : null;
+  const color = TYPE_COLORS[s.type] || '#818cf8';
+  const anchors = s.anchors || [];
+  const rels = s.relations || [];
+  return `<div class="spec-card${open?' open':''}" onclick="toggleSpecCard('${esc(s.spec_id)}')">
+    <div class="spec-row">
+      <span class="spec-tag spec-tag-${s.type}">${s.type}</span>
+      <span class="spec-id" title="${esc(s.spec_id)}">${esc(s.spec_id)}</span>
+      ${conf!==null?`<span class="spec-conf">${conf}%</span>`:''}
+    </div>
+    <div class="spec-summary">${esc(s.summary)}</div>
+    ${conf!==null?`<div class="spec-conf-bar"><div class="spec-conf-fill" style="width:${conf}%;background:${color}"></div></div>`:''}
+    ${open?`<div class="spec-details">
+      ${s.detail?`<h4>Detail</h4><p>${esc(s.detail)}</p>`:''}
+      ${anchors.length?`<h4>Anchors (${anchors.length})</h4><ul>${anchors.map(a=>`<li>${esc(typeof a==='string'?a:a.file)}${a.symbols?' — '+a.symbols.join(', '):''}</li>`).join('')}</ul>`:''}
+      ${rels.length?`<h4>Relations (${rels.length})</h4><ul>${rels.map(r=>`<li>${esc(typeof r==='string'?r:(r.type+' → '+r.target_spec_id))}</li>`).join('')}</ul>`:''}
+      <div class="meta-line">
+        <span>feature: ${esc(s.feature_name)}</span>
+        <span>provenance: ${s.provenance||'?'}</span>
+        <span>state: ${s.state||'?'}</span>
+      </div>
+    </div>`:''}
+  </div>`;
+}
+function toggleSpecCard(id) { expandedSpecs.has(id)?expandedSpecs.delete(id):expandedSpecs.add(id); renderSpecs(); }
+
+/* ═══════════════════════════════════════════════
+   Knowledge Graph (Force-directed, Canvas)
+   ═══════════════════════════════════════════════ */
+let graphNodes = [], graphLinks = [], graphAnim = null;
+
+function initGraph() {
+  const container = document.getElementById('graph-container');
+  const canvas = document.getElementById('graph-canvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    const r = container.getBoundingClientRect();
+    canvas.width = r.width * dpr;
+    canvas.height = r.height * dpr;
+    canvas.style.width = r.width + 'px';
+    canvas.style.height = r.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: r.width, h: r.height };
+  }
+  let { w, h } = resize();
+
+  // Build nodes from features
+  const typeColor = { business: '#818cf8', platform: '#a78bfa', 'cross-cutting': '#22d3ee' };
+  graphNodes = D.features.map((f, i) => {
+    const specCount = D.specs.filter(s => s.feature_name === f.feature_id).length;
+    const r = Math.max(8, Math.min(40, Math.sqrt(specCount) * 5));
+    // Initial position: clustered by parent
+    const angle = (i / D.features.length) * Math.PI * 2;
+    const dist = 100 + Math.random() * 80;
+    return {
+      id: f.feature_id, name: f.name, type: f.type,
+      specs: specCount, r,
+      x: w/2 + Math.cos(angle) * dist,
+      y: h/2 + Math.sin(angle) * dist,
+      vx: 0, vy: 0,
+      color: typeColor[f.type] || '#818cf8',
+    };
+  });
+
+  // Build links from parent-child + spec relations
+  const nodeMap = new Map(graphNodes.map(n => [n.id, n]));
+  graphLinks = [];
+  D.features.forEach(f => {
+    if (f.parent && nodeMap.has(f.parent)) {
+      graphLinks.push({ source: nodeMap.get(f.parent), target: nodeMap.get(f.feature_id), strength: 0.5 });
+    }
+  });
+  // Spec cross-feature relations
+  const featureOfSpec = new Map(D.specs.map(s => [s.spec_id, s.feature_name]));
+  D.specs.forEach(s => {
+    (s.relations || []).forEach(r => {
+      const targetId = typeof r === 'string' ? r : r.target_spec_id;
+      const targetFeature = featureOfSpec.get(targetId);
+      if (targetFeature && targetFeature !== s.feature_name && nodeMap.has(s.feature_name) && nodeMap.has(targetFeature)) {
+        // Avoid duplicate links
+        if (!graphLinks.find(l => (l.source.id===s.feature_name && l.target.id===targetFeature) || (l.source.id===targetFeature && l.target.id===s.feature_name))) {
+          graphLinks.push({ source: nodeMap.get(s.feature_name), target: nodeMap.get(targetFeature), strength: 0.15 });
+        }
+      }
+    });
+  });
+
+  document.getElementById('graph-hint').style.display = 'none';
+
+  // Physics
+  let hovered = null, dragging = null, mx = 0, my = 0;
+  const CENTER_FORCE = 0.01;
+  const REPULSION = 800;
+  const LINK_FORCE = 0.02;
+  const DAMPING = 0.85;
+  let simSteps = 200;
+
+  function simulate() {
+    // Center gravity
+    graphNodes.forEach(n => {
+      n.vx += (w/2 - n.x) * CENTER_FORCE;
+      n.vy += (h/2 - n.y) * CENTER_FORCE;
+    });
+    // Repulsion
+    for (let i = 0; i < graphNodes.length; i++) {
+      for (let j = i+1; j < graphNodes.length; j++) {
+        const a = graphNodes[i], b = graphNodes[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+        const minDist = a.r + b.r + 8;
+        const force = REPULSION / (dist * dist);
+        const fx = dx/dist * force, fy = dy/dist * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+        // Collision
+        if (dist < minDist) {
+          const overlap = (minDist - dist) / 2;
+          a.x -= dx/dist * overlap;
+          a.y -= dy/dist * overlap;
+          b.x += dx/dist * overlap;
+          b.y += dy/dist * overlap;
+        }
+      }
+    }
+    // Link springs
+    graphLinks.forEach(l => {
+      const dx = l.target.x - l.source.x, dy = l.target.y - l.source.y;
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      const target = l.source.r + l.target.r + 40;
+      const f = (dist - target) * LINK_FORCE * (l.strength || 1);
+      const fx = dx/dist * f, fy = dy/dist * f;
+      l.source.vx += fx; l.source.vy += fy;
+      l.target.vx -= fx; l.target.vy -= fy;
+    });
+    // Integrate
+    graphNodes.forEach(n => {
+      if (n === dragging) return;
+      n.vx *= DAMPING; n.vy *= DAMPING;
+      n.x += n.vx; n.y += n.vy;
+      // Keep in bounds
+      n.x = Math.max(n.r, Math.min(w - n.r, n.x));
+      n.y = Math.max(n.r, Math.min(h - n.r, n.y));
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    // Links
+    graphLinks.forEach(l => {
+      ctx.beginPath();
+      ctx.moveTo(l.source.x, l.source.y);
+      ctx.lineTo(l.target.x, l.target.y);
+      const isHighlight = hovered && (l.source === hovered || l.target === hovered);
+      ctx.strokeStyle = isHighlight ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = isHighlight ? 1.5 : 0.5;
+      ctx.stroke();
+    });
+    // Nodes
+    graphNodes.forEach(n => {
+      const isHov = n === hovered;
+      const isSel = n.id === selectedFeature;
+      const dim = hovered && !isHov && !graphLinks.some(l => (l.source===hovered&&l.target===n)||(l.target===hovered&&l.source===n));
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+      ctx.fillStyle = dim ? (n.color + '22') : (isHov || isSel ? n.color : n.color + '88');
+      ctx.fill();
+      if (isSel) {
+        ctx.strokeStyle = n.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      // Label
+      if (n.r > 12 || isHov) {
+        ctx.fillStyle = dim ? 'rgba(255,255,255,0.1)' : (isHov ? '#fff' : 'rgba(255,255,255,0.7)');
+        ctx.font = `${isHov?'600':'500'} ${isHov?12:10}px -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(n.name, n.x, n.y + n.r + 14);
+      }
+    });
+  }
+
+  function frame() {
+    if (simSteps > 0) { simulate(); simSteps--; }
+    draw();
+    graphAnim = requestAnimationFrame(frame);
+  }
+  frame();
+
+  // Interaction
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mx = e.clientX - rect.left; my = e.clientY - rect.top;
+    const prev = hovered;
+    hovered = graphNodes.find(n => Math.hypot(n.x-mx, n.y-my) < n.r + 4) || null;
+    canvas.style.cursor = hovered ? 'pointer' : 'default';
+    if (hovered !== prev) {
+      const tt = document.getElementById('graph-tooltip');
+      if (hovered) {
+        tt.innerHTML = `<h4>${esc(hovered.name)}</h4><p>${hovered.specs} specs &middot; ${hovered.type}</p>`;
+        tt.className = 'graph-tooltip show';
+        tt.style.left = (mx + 16) + 'px'; tt.style.top = (my - 8) + 'px';
+      } else { tt.className = 'graph-tooltip'; }
+    }
+    if (dragging) {
+      dragging.x = mx; dragging.y = my;
+      dragging.vx = 0; dragging.vy = 0;
+      simSteps = 50;
+    }
+  });
+  canvas.addEventListener('mousedown', () => { if (hovered) dragging = hovered; });
+  canvas.addEventListener('mouseup', () => {
+    if (dragging && hovered === dragging) selectFeature(dragging.id);
+    dragging = null;
+  });
+  canvas.addEventListener('mouseleave', () => {
+    hovered = null; dragging = null;
+    document.getElementById('graph-tooltip').className = 'graph-tooltip';
+  });
+
+  // Resize
+  window.addEventListener('resize', () => {
+    ({ w, h } = resize());
+    simSteps = 30;
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   Coverage + Treemap
+   ═══════════════════════════════════════════════ */
+function renderCoverage() {
+  const m = D.meta, c = D.coverage;
+  const total = m?.stats?.total_files || (c ? (c.covered_files?.length||0)+(c.uncovered_files?.length||0) : 0);
+  const covered = c?.covered_files?.length || m?.stats?.files_with_specs || 0;
+  const pct = c?.coverage_percent ?? m?.stats?.coverage_percent ?? (total ? Math.round(covered/total*100) : 0);
+  const pctColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('cov-stats').innerHTML = `
+    <div class="cov-card"><div class="num" style="color:${pctColor}">${pct}%</div><div class="label">Coverage</div><div class="cov-bar-wrap"><div class="cov-bar-fill" style="width:${pct}%;background:${pctColor}"></div></div></div>
+    <div class="cov-card"><div class="num">${covered}</div><div class="label">Covered</div></div>
+    <div class="cov-card"><div class="num">${total-covered}</div><div class="label">Uncovered</div></div>
+    <div class="cov-card"><div class="num">${D.specs.length}</div><div class="label">Total Specs</div></div>
+  `;
+
+  requestAnimationFrame(initTreemap);
+}
+
+function initTreemap() {
+  const wrap = document.getElementById('treemap-wrap');
+  const canvas = document.getElementById('treemap-canvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = wrap.getBoundingClientRect();
+  const W = rect.width, H = rect.height;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Build treemap data: features sorted by spec count
+  const feats = D.features.map(f => {
+    const specs = D.specs.filter(s => s.feature_name === f.feature_id).length;
+    const files = new Set();
+    D.specs.filter(s => s.feature_name === f.feature_id).forEach(s =>
+      (s.anchors||[]).forEach(a => files.add(typeof a==='string'?a:a.file))
+    );
+    return { id: f.feature_id, name: f.name, type: f.type, specs, files: files.size };
+  }).filter(f => f.specs > 0).sort((a,b) => b.specs - a.specs);
+
+  const totalSpecs = feats.reduce((s,f) => s+f.specs, 0);
+  const rects = squarify(feats.map(f => f.specs/totalSpecs), { x:0, y:0, w:W, h:H });
+
+  const typeColors = { business: [129,140,248], platform: [167,139,250], 'cross-cutting': [34,211,238] };
+  const cells = feats.map((f, i) => ({ ...f, ...rects[i] }));
+
+  // Draw
+  function draw(hovIdx) {
+    ctx.clearRect(0, 0, W, H);
+    cells.forEach((c, i) => {
+      const rgb = typeColors[c.type] || [129,140,248];
+      const alpha = hovIdx === i ? 0.5 : 0.25;
+      ctx.fillStyle = `rgba(${rgb.join(',')},${alpha})`;
+      ctx.fillRect(c.x+1, c.y+1, c.w-2, c.h-2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.strokeRect(c.x+1, c.y+1, c.w-2, c.h-2);
+      // Label
+      if (c.w > 50 && c.h > 30) {
+        ctx.fillStyle = hovIdx===i ? '#fff' : 'rgba(255,255,255,0.7)';
+        ctx.font = `500 ${Math.min(12, c.w/8)}px -apple-system, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const label = c.name.length > c.w/7 ? c.name.slice(0, Math.floor(c.w/7))+'...' : c.name;
+        ctx.fillText(label, c.x+c.w/2, c.y+c.h/2 - 6);
+        ctx.fillStyle = hovIdx===i ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.3)';
+        ctx.font = `400 ${Math.min(10, c.w/10)}px -apple-system, sans-serif`;
+        ctx.fillText(`${c.specs} specs`, c.x+c.w/2, c.y+c.h/2 + 10);
+      }
+    });
+  }
+  draw(-1);
+
+  // Hover
+  let hovIdx = -1;
+  canvas.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const idx = cells.findIndex(c => mx >= c.x && mx <= c.x+c.w && my >= c.y && my <= c.y+c.h);
+    if (idx !== hovIdx) {
+      hovIdx = idx;
+      draw(hovIdx);
+      const tt = document.getElementById('treemap-tooltip');
+      if (hovIdx >= 0) {
+        const c = cells[hovIdx];
+        tt.innerHTML = `<strong>${esc(c.name)}</strong><br><span style="color:var(--text-2)">${c.specs} specs &middot; ${c.files} files &middot; ${c.type}</span>`;
+        tt.className = 'treemap-tooltip show';
+        tt.style.left = (mx+12)+'px'; tt.style.top = (my-8)+'px';
+      } else { tt.className = 'treemap-tooltip'; }
+    }
+    canvas.style.cursor = hovIdx >= 0 ? 'pointer' : 'default';
+  });
+  canvas.addEventListener('click', () => {
+    if (hovIdx >= 0) { selectFeature(cells[hovIdx].id); switchTab('specs'); }
+  });
+  canvas.addEventListener('mouseleave', () => {
+    hovIdx = -1; draw(-1);
+    document.getElementById('treemap-tooltip').className = 'treemap-tooltip';
+  });
+}
+
+// Squarified treemap algorithm
+function squarify(values, rect) {
+  const rects = [];
+  const n = values.length;
+  if (n === 0) return rects;
+  if (n === 1) { rects.push({ x:rect.x, y:rect.y, w:rect.w, h:rect.h }); return rects; }
+
+  let { x, y, w, h } = rect;
+  let remaining = [...values];
+  let sumAll = remaining.reduce((a,b)=>a+b, 0);
+
+  while (remaining.length > 0) {
+    const isWide = w >= h;
+    const side = isWide ? h : w;
+    let row = [remaining[0]];
+    let rowSum = remaining[0];
+    remaining.shift();
+
+    const worst = (row, side, rowSum) => {
+      const s2 = rowSum * rowSum;
+      const maxR = Math.max(...row);
+      const minR = Math.min(...row);
+      return Math.max((side*side*maxR)/s2, s2/(side*side*minR));
+    };
+
+    while (remaining.length > 0) {
+      const newRow = [...row, remaining[0]];
+      const newSum = rowSum + remaining[0];
+      if (worst(newRow, side, newSum) <= worst(row, side, rowSum)) {
+        row = newRow; rowSum = newSum; remaining.shift();
+      } else break;
+    }
+
+    const rowFrac = rowSum / sumAll;
+    const rowDim = isWide ? w * rowFrac : h * rowFrac;
+    let offset = 0;
+    row.forEach(v => {
+      const frac = v / rowSum;
+      if (isWide) {
+        rects.push({ x: x+offset*h*0+0, y: y+offset*(isWide?h:0), w: rowDim, h: h * frac });
+        // Fix: layout along the short side
+      } else {
+        rects.push({ x: x+offset*(isWide?0:w), y: y, w: w * frac, h: rowDim });
+      }
+      offset += frac;
+    });
+
+    // Actually let me redo this properly
+    rects.length -= row.length; // undo
+    offset = 0;
+    row.forEach(v => {
+      const frac = v / rowSum;
+      if (isWide) {
+        rects.push({ x, y: y + offset * h, w: rowDim, h: h * frac });
+      } else {
+        rects.push({ x: x + offset * w, y, w: w * frac, h: rowDim });
+      }
+      offset += frac;
+    });
+
+    if (isWide) { x += rowDim; w -= rowDim; }
+    else { y += rowDim; h -= rowDim; }
+    sumAll -= rowSum;
+  }
+  return rects;
+}
+
+/* ═══════════════════════════════════════════════
+   Command Palette
+   ═══════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCmd(); }
+  if (e.key === 'Escape') closeCmd();
+});
+
+function openCmd() {
+  document.getElementById('cmd-overlay').classList.add('open');
+  const input = document.getElementById('cmd-input');
+  input.value = ''; input.focus();
+  cmdIdx = 0; updateCmd();
+}
+function closeCmd() {
+  document.getElementById('cmd-overlay').classList.remove('open');
+}
+
+function updateCmd() {
+  const q = document.getElementById('cmd-input').value.toLowerCase();
+  const results = [];
+  // Features
+  D.features.forEach(f => {
+    if (!q || f.name.toLowerCase().includes(q) || f.feature_id.includes(q)) {
+      results.push({ type: 'feature', name: f.name, id: f.feature_id, subtype: f.type });
+    }
+  });
+  // Specs (limit)
+  if (q.length >= 2) {
+    D.specs.forEach(s => {
+      if (results.length > 30) return;
+      if (s.spec_id.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q)) {
+        results.push({ type: 'spec', name: s.summary.slice(0,60), id: s.spec_id, subtype: s.type });
+      }
+    });
+  }
+  const limited = results.slice(0, 20);
+  cmdIdx = Math.min(cmdIdx, limited.length - 1);
+  document.getElementById('cmd-results').innerHTML = limited.length
+    ? limited.map((r, i) => `<div class="cmd-item${i===cmdIdx?' active':''}" onmouseenter="cmdIdx=${i};updateCmd()" onclick="cmdSelect(${i})">
+        <span class="cmd-type">${r.type}</span><span>${esc(r.name)}</span>
+      </div>`).join('')
+    : '<div class="cmd-empty">No results</div>';
+  window._cmdResults = limited;
+}
+
+function cmdKey(e) {
+  const items = window._cmdResults || [];
+  if (e.key === 'ArrowDown') { e.preventDefault(); cmdIdx = Math.min(cmdIdx+1, items.length-1); updateCmd(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); cmdIdx = Math.max(cmdIdx-1, 0); updateCmd(); }
+  if (e.key === 'Enter' && items.length) { e.preventDefault(); cmdSelect(cmdIdx); }
+}
+
+function cmdSelect(idx) {
+  const r = (window._cmdResults || [])[idx]; if (!r) return;
+  closeCmd();
+  if (r.type === 'feature') {
+    selectFeature(r.id);
+  } else {
+    // Find feature of spec
+    const spec = D.specs.find(s => s.spec_id === r.id);
+    if (spec) {
+      selectFeature(spec.feature_name);
+      expandedSpecs.add(r.id);
+      switchTab('specs');
+      renderSpecs();
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   Tabs & Routing
+   ═══════════════════════════════════════════════ */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(t => {
+    const isActive = t.dataset.tab === tab;
+    t.classList.toggle('active', isActive);
+    t.setAttribute('aria-selected', isActive);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-'+tab));
+  if (tab === 'graph' && graphNodes.length === 0) requestAnimationFrame(initGraph);
+  if (tab === 'coverage') requestAnimationFrame(initTreemap);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+/* ═══════════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════════ */
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+</script>
+</body>
+</html>

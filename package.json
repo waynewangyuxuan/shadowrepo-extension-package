@@ -1,0 +1,25 @@
+{
+  "name": "shadowrepo-extension-package",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ShadowRepo monorepo — VS Code extension, Claude Code plugin, and MCP server for the .shadowrepo/ knowledge graph.",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waynewangyuxuan/shadowrepo-extension-package.git"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "clean": "pnpm -r --if-present clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+out/
+*.tsbuildinfo
+*.vsix
+
+# editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# local ShadowRepo cache (per-project, not source)
+.shadowrepo/
+
+# secrets / env
+.env
+.env.local
+.env.*.local
+
+# misc tool dirs
+.gstack/
+.claude/
+
+# AI-Robin orchestrator run state — not part of the deliverable
+.ai-robin/
+
+# Other orchestrator / tool scratch dirs
+.superpowers/

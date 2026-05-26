@@ -1,0 +1,22 @@
+{
+  "name": "shadowrepo",
+  "version": "0.1.0",
+  "description": "Semantic code knowledge graph builder. Scans repos, builds structured feature trees and spec graphs, detects code-spec drift, generates documentation. Six skills: build, check, update, render, preview, help. Plus /shadowrepo-review pre-commit alignment check and /shadowrepo-pr-comment GitHub-ops draft-PR wrap.",
+  "author": {
+    "name": "Wayne Wang"
+  },
+  "commands": [
+    "./commands/shadowrepo-review.md",
+    "./commands/shadowrepo-pr-comment.md"
+  ],
+  "mcpServers": {
+    "shadowrepo": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "shadowrepo-mcp-server@latest"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# Package-specific. Shared patterns live in the root .gitignore.
+# spec/ is intentionally tracked here (assignment submission documents the design).
+*.db
+*.db-wal
+*.db-shm
+.claude/

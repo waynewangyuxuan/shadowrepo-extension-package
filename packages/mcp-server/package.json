@@ -1,0 +1,55 @@
+{
+  "name": "shadowrepo-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server exposing incremental .shadowrepo/ read/write tools for Claude Code and other MCP-compatible coding agents.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "shadowrepo-mcp-server": "./dist/index.js"
+  },
+  "license": "MIT",
+  "author": "Wayne Wang <w.wayne.vip@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waynewangyuxuan/shadowrepo-extension-package.git",
+    "directory": "packages/mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/waynewangyuxuan/shadowrepo-extension-package/issues"
+  },
+  "homepage": "https://github.com/waynewangyuxuan/shadowrepo-extension-package#readme",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "shadowrepo",
+    "claude",
+    "claude-code",
+    "knowledge-graph",
+    "spec",
+    "code-intelligence"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --out-dir dist --target node20 --clean --shims",
+    "dev": "tsup src/index.ts --format esm --out-dir dist --target node20 --watch --shims",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "pnpm run build",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  },
+  "devDependencies": {
+    "@shadowrepo/shared": "workspace:*",
+    "@types/node": "^20.16.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3"
+  }
+}

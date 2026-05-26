@@ -1,0 +1,112 @@
+{
+  "name": "shadowrepo-vscode",
+  "displayName": "ShadowRepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sidebar tree view of features and specs from .shadowrepo/. Companion to the ShadowRepo Claude plugin.",
+  "publisher": "waynewangyuxuan",
+  "license": "MIT",
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waynewangyuxuan/shadowrepo-extension-package.git"
+  },
+  "bugs": {
+    "url": "https://github.com/waynewangyuxuan/shadowrepo-extension-package/issues"
+  },
+  "homepage": "https://github.com/waynewangyuxuan/shadowrepo-extension-package#readme",
+  "keywords": [
+    "shadowrepo",
+    "knowledge graph",
+    "spec",
+    "documentation",
+    "claude",
+    "code intelligence"
+  ],
+  "engines": {
+    "vscode": "^1.90.0",
+    "node": ">=20"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:.shadowrepo/features.json",
+    "workspaceContains:.shadowrepo/feature.json",
+    "workspaceContains:fixtures/sample-repo/.shadowrepo/features.json",
+    "onView:shadowrepo.features"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "shadowrepo",
+          "title": "ShadowRepo",
+          "icon": "resources/shadowrepo.svg"
+        }
+      ]
+    },
+    "views": {
+      "shadowrepo": [
+        {
+          "id": "shadowrepo.features",
+          "name": "Features",
+          "contextualTitle": "ShadowRepo Features"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "shadowrepo.features",
+        "contents": "No `.shadowrepo/` data loaded.\n\nRun `/shadowrepo-build` in Claude Code to generate the knowledge graph, or set `shadowrepo.fixturePath` (e.g., `fixtures/sample-repo`) to load a demo fixture."
+      }
+    ],
+    "commands": [
+      {
+        "command": "shadowrepo.refresh",
+        "title": "ShadowRepo: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "shadowrepo.openAnchor",
+        "title": "ShadowRepo: Open Anchor"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "shadowrepo.refresh",
+          "when": "view == shadowrepo.features",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ShadowRepo",
+      "properties": {
+        "shadowrepo.fixturePath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional override for the .shadowrepo/ directory. Absolute or workspace-relative. If empty, defaults to <workspace>/.shadowrepo. Example for this monorepo: 'fixtures/sample-repo' (or 'fixtures/sample-repo/.shadowrepo' — both accepted)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "package": "vsce package --no-dependencies",
+    "clean": "rm -rf dist *.vsix"
+  },
+  "devDependencies": {
+    "@shadowrepo/shared": "workspace:*",
+    "@types/node": "^20.16.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3"
+  }
+}

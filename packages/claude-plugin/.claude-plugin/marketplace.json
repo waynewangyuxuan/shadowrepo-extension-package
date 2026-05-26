@@ -1,0 +1,13 @@
+{
+  "name": "shadowrepo",
+  "owner": {
+    "name": "waynewangyuxuan"
+  },
+  "plugins": [
+    {
+      "name": "shadowrepo",
+      "source": "./",
+      "description": "Semantic code knowledge graph builder. Scans repos, builds structured feature trees and spec graphs, detects code-spec drift, generates documentation. Ships six skills (build, check, update, render, preview, help) plus an HTML dashboard bundled as a template."
+    }
+  ]
+}
