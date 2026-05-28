@@ -24,6 +24,9 @@ The decisions behind code — *why JWT over sessions? why this schema? why five 
 
 ShadowRepo scans your repo, extracts structured semantic specs into a `.shadowrepo/` directory, organizes them into a feature tree, and detects when code drifts from those specs. Then it surfaces all of that in your editor.
 
+![ShadowRepo running in VS Code](docs/screenshots/vscode-extension-overview.png)
+*Sidebar tree (left), feature dossier (middle), spec dossier (right).*
+
 ## Install
 
 ShadowRepo ships as **three connected pieces** that can be installed independently.

@@ -1,6 +1,7 @@
 # DEMO — ShadowRepo
 
 **Repository:** https://github.com/waynewangyuxuan/shadowrepo-extension-package
+**VS Code Marketplace:** https://marketplace.visualstudio.com/items?itemName=waynewangyuxuan.shadowrepo-vscode
 **npm:** https://www.npmjs.com/package/shadowrepo-mcp-server
 
 > **Tooling scope:** assumes Claude Code + VS Code. Cursor, Codex, or other editors are not supported.
@@ -8,13 +9,20 @@
 **Status:**
 - ✅ Claude Code plugin — GitHub-based marketplace
 - ✅ MCP server (`shadowrepo-mcp-server`) — npm, pulled via `npx`
-- 🚧 VS Code extension — install-from-source only (see Path B)
+- ✅ VS Code extension — VS Code Marketplace (also installable from source, see Build section)
+
+![ShadowRepo running in VS Code](docs/screenshots/vscode-extension-overview.png)
+*Sidebar tree (left), feature dossier (middle), spec dossier (right).*
 
 ---
 
-## Path A — Claude plugin
+## Install (no clone needed)
 
 Requires Claude Code and Node.js 20+.
+
+### Claude plugin
+
+In any Claude Code session:
 
 ```
 /plugin marketplace add waynewangyuxuan/shadowrepo-extension-package
@@ -32,11 +40,21 @@ Requires Claude Code and Node.js 20+.
 | `/shadowrepo-review` | Pre-commit alignment report |
 | `/shadowrepo-pr-comment` | Wrap `gh pr create --draft` with a ShadowRepo summary |
 
+### VS Code extension
+
+In VS Code: **Extensions panel → search `shadowrepo` → Install**. Or via CLI:
+
+```bash
+code --install-extension waynewangyuxuan.shadowrepo-vscode
+```
+
+Open any workspace that has a `.shadowrepo/` directory and click the ShadowRepo icon in the activity bar.
+
 ---
 
-## Path B — Build from source + VS Code sidebar
+## Build from source
 
-Requires Node.js 20+, pnpm 9+, VS Code with `code` on `PATH`. Linux/WSL assumed.
+For contributors. Requires pnpm 9+ in addition to the above. Linux/WSL assumed.
 
 ### Build
 
@@ -50,19 +68,22 @@ pnpm --filter shadowrepo-vscode package
 
 Output: `packages/vscode-extension/shadowrepo-vscode-0.1.0.vsix`.
 
-### Install the extension
+### Install your local build
 
 ```bash
 code --install-extension packages/vscode-extension/shadowrepo-vscode-0.1.0.vsix
 ```
 
-### Open the demo workspace
+### Demo workspace
 
 ```bash
 code fixtures/sample-repo
 ```
 
-Click the **ShadowRepo** icon in the activity bar. Sidebar populates with 36 features / 629 specs.
+Click the **ShadowRepo** icon. Sidebar populates with 36 features / 629 specs.
+
+![Spec dossier — review-heuristics](docs/screenshots/spec-dossier.png)
+*Click any spec for its full body, source anchors, and relations graph.*
 
 > Fixture anchors are off-disk — clicks log a warning instead of opening the file. Tree itself is fully navigable.
 
@@ -97,4 +118,3 @@ Add `--dry-run --title "test" --base main` to print the `gh` commands without ru
 ## Not in this demo
 
 - `/shadowrepo-pr-comment` real-run mode — would open a draft PR on the runner's GitHub.
-- VS Code Marketplace one-click install — deferred.
