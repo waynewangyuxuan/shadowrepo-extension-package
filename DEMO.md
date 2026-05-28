@@ -42,7 +42,11 @@ In any Claude Code session:
 
 ### VS Code extension
 
-In VS Code: **Extensions panel → search `shadowrepo` → Install**. Or via CLI:
+In VS Code: **Extensions panel → search `shadowrepo` → Install**.
+
+![VS Code Marketplace search result](docs/screenshots/vscode-marketplace-search.png)
+
+Or via CLI:
 
 ```bash
 code --install-extension waynewangyuxuan.shadowrepo-vscode
